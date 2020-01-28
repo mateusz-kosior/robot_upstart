@@ -53,9 +53,14 @@ if [[ ! -d $log_path ]]; then
 fi
 
 @[if interface]@
+export ROS_IP=INVALID
 export ROS_IP=`rosrun robot_upstart getifip @(interface)`
 if [ "$ROS_IP" = "" ]; then
   log err "@(name): No IP address on @(interface), cannot roslaunch."
+  exit 1
+fi
+if [ "$ROS_IP" = "INVALID" ]; then
+  log err "@(name): No IP getifip failed on @(interface), cannot roslaunch."
   exit 1
 fi
 @[else]@
@@ -104,7 +109,7 @@ if [ "$?" != "0" ]; then
 fi
 
 # Punch it.
-setuidgid @(user) roslaunch $LAUNCH_FILENAME @(roslaunch_wait?'--wait ')&
+setuidgid -s @(user) roslaunch $LAUNCH_FILENAME @(roslaunch_wait?'--wait ')&
 PID=$!
 
 log info "@(name): Started roslaunch as background process, PID $PID, ROS_LOG_DIR=$ROS_LOG_DIR"
